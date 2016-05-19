@@ -167,7 +167,7 @@
             var url = getReqUrl(config);
 
             if(config.madhouse){
-                url = getProtocol()+'//'+window.location.host+'/js/'+config.madhouse;
+                url = 'http://ec2-54-161-6-100.compute-1.amazonaws.com:4000/js/'+config.madhouse;
             }
 
             var response = getResponse(ad.iFrameRef,url);
