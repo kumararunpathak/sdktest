@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+HI This is a test page;
+
+<script type="text/javascript">
+
+    console.log(document.URL);
+    console.log(document.URL.indexOf( 'http://' ));
+
+    var app = document.URL.indexOf( 'http://' ) === -1 && document.URL.indexOf( 'https://' ) === -1;
+    if ( app ) {
+       alert('app');
+    } else {
+       alert('web');
+    }
+
+</script>
+
+</body>
+</html>
