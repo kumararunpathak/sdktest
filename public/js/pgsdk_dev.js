@@ -210,22 +210,73 @@
             return str;
         }
 
+        var wrapResponseInHtml = function (a) {
+            var b = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><html><head><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/></head><body style="margin: 0px;padding: 0px;background-color: black;">';
+            return b += a, b += "</body></html>"
+        }
+
+        var getAdFromServer = function(url,cb){
+
+            var xmlhttp;
+            if (window.XMLHttpRequest)
+            {// code for IE7+, Firefox, Chrome, Opera, Safari
+                xmlhttp=new XMLHttpRequest();
+            }
+            else
+            {// code for IE6, IE5
+                xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+            }
+
+            xmlhttp.onreadystatechange = function() {
+                if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                    var e = xmlhttp.responseText;
+                    -1 == e.indexOf("<html") && (e = wrapResponseInHtml(e))
+                    e.replace("<body>", '<body style="margin:0px;padding:0px;">')
+                    //iframe.contentWindow.document.open();
+                    //iframe.contentWindow.document.write(e);
+                    //iframe.contentWindow.document.close();
+                    cb(null,e);
+                }else{
+                    cb({message:"some error"});
+                }
+
+            };
+            xmlhttp.open("GET", url, true);
+            xmlhttp.send();
+
+        }
+
         var ad = function (ad, config) {
             if (typeof config == "object" && config != null) {
                 ad.config = config
             } else {
                 ad.config = defaultParams;
             }
-            ad.iFrameRef.src = getReqUrl(config) + "&iframe=" + ad.iFrameRef.id;
-            ad.iFrameRef.style.display = "block";
-            ad.iFrameRef.style.width = ad.iFrameRef.parentNode.style.width = config.ad_width + "px";
-            ad.iFrameRef.style.height = ad.iFrameRef.parentNode.style.height = config.ad_height + "px";
-            return ad
+            var url = getReqUrl(config);
+            getAdFromServer(url,function(err,response){
+                if(!err){
+                    ad.iFrameRef.contentWindow.document.open();
+                    ad.iFrameRef.contentWindow.document.write(response);
+                    ad.iFrameRef.contentWindow.document.close();
+                    ad.iFrameRef.style.display = "block";
+                    ad.iFrameRef.style.width = ad.iFrameRef.parentNode.style.width = config.ad_width + "px";
+                    ad.iFrameRef.style.height = ad.iFrameRef.parentNode.style.height = config.ad_height + "px";
+                    ad.adContainer.appendChild(ad.iFrameRef);
+                    ad.adContainer.style.display = "block";
+                    if (ad.config.ad_type === 'int' || ad.config.ad_type === true) {
+                        showBGPopup();
+                        adCloseButton(ad.iFrameRef,ad.config);
+                    }
+                }
+                return ad
+            });
+
         }
 
-        var createAd = function (iFrame, config) {
+        var createAd = function (iFrame, adContainer, config) {
             return {
                 iFrameRef: iFrame,
+                adContainer:adContainer,
                 config: config,
                 getNewAd: function (config) {
                     return ad(this, config)
@@ -241,6 +292,22 @@
             iframe.parentNode.insertBefore(closeButton, iframe.parentNode.firstChild)
         }
 
+        var showBGPopup = function(){
+            intOverlay = document.createElement("div");
+            intOverlayId = 'pg-int-overlay-' + getRandomId();
+            intOverlay.id = intOverlayId;
+            intOverlay.style.position = 'absolute';
+            intOverlay.display = 'block';
+            intOverlay.style.top = "0px";
+            intOverlay.style.background = "#999";
+            intOverlay.style.opacity = 0.5;
+            intOverlay.style.zIndex = 6000001;
+            intOverlay.style.width = "100%";
+            intOverlay.style.height = document.body.clientHeight + 'px';
+            intOverlay.scrolling = "no";
+            document.body.appendChild(intOverlay);
+        }
+
         var initAd = function (config) {
 
             var randomId = getRandomId();
@@ -250,33 +317,17 @@
             adContainer.style.display = 'none';
 
             if (config.ad_type === 'int' || config.ad_type == true) {
-
-                if (!intOverlay) {
-                    adContainer.style.position = 'absolute';
-                    adContainer.style.top = "0px";
-                    adContainer.scrolling = "no";
-                    var marginLeft = Math.ceil((window.innerWidth - config.ad_width) / 2);
-                    marginLeft = marginLeft > 0 ? marginLeft : 0;
-                    var marginTop = Math.ceil((window.innerHeight - config.ad_height) / 2);
-                    marginTop = marginTop > 0 ? marginTop : 0;
-                    adContainer.style.marginLeft = marginLeft + 'px';
-                    adContainer.style.marginTop = marginTop + 'px';
-                    document.body.appendChild(adContainer);
-                    intOverlay = document.createElement("div");
-                    intOverlayId = 'pg-int-overlay-' + randomId;
-                    intOverlay.id = intOverlayId;
-                    intOverlay.style.position = 'absolute';
-                    intOverlay.display = 'block';
-                    intOverlay.style.top = "0px";
-                    intOverlay.style.background = "#999";
-                    intOverlay.style.opacity = 0.5;
-                    intOverlay.style.zIndex = 6000001;
-                    intOverlay.style.width = "100%";
-                    intOverlay.style.height = document.body.clientHeight + 'px';
-                    intOverlay.scrolling = "no";
-                    adContainer.style.zIndex = 6000002;
-
-                }
+                adContainer.style.position = 'absolute';
+                adContainer.style.top = "0px";
+                adContainer.scrolling = "no";
+                var marginLeft = Math.ceil((window.innerWidth - config.ad_width) / 2);
+                marginLeft = marginLeft > 0 ? marginLeft : 0;
+                var marginTop = Math.ceil((window.innerHeight - config.ad_height) / 2);
+                marginTop = marginTop > 0 ? marginTop : 0;
+                adContainer.style.marginLeft = marginLeft + 'px';
+                adContainer.style.marginTop = marginTop + 'px';
+                document.body.appendChild(adContainer);
+                adContainer.style.zIndex = 6000002;
 
             } else {
                 var scriptContainer = document.getElementById('_pgads');
@@ -294,16 +345,8 @@
             iframe.scrolling = "no";
             iframe.marginHeight = "0px";
             iframe.marginWidth="0px";
-
             adContainer.appendChild(iframe);
-            iframe.onload = function (event) {
-                adContainer.style.display = "block";
-                if (config.ad_type == 'int' || config.ad_type == true) {
-                    adCloseButton(this, config);
-                    document.body.appendChild(intOverlay);
-                }
-            }
-            ad = createAd(iframe, config);
+            ad = createAd(iframe, adContainer,config);
             ad.getNewAd(config);
         }
 
@@ -324,6 +367,7 @@
                 }
                 if (intOverlay) {
                     document.body.removeChild(intOverlay);
+                    intOverlay == null;
                 }
             }
         }
