@@ -247,6 +247,7 @@
             var iFrameID = 'pg-ifame-' + randomId, iframe, ad;
             var iframe = document.createElement("iframe");
             var adContainer = document.createElement("div");
+            adContainer.style.display = 'none';
 
             if (config.ad_type === 'int' || config.ad_type == true) {
 
@@ -291,15 +292,16 @@
             iframe.style.border = "none";
             iframe.style.overflow = "hidden";
             iframe.scrolling = "no";
+            iframe.marginHeight = "0px";
+            iframe.marginWidth="0px";
 
             adContainer.appendChild(iframe);
             iframe.onload = function (event) {
+                adContainer.style.display = "block";
                 if (config.ad_type == 'int' || config.ad_type == true) {
                     adCloseButton(this, config);
                     document.body.appendChild(intOverlay);
                 }
-                var doc = iframe.contentWindow.document;
-                console.log(doc);
             }
             ad = createAd(iframe, config);
             ad.getNewAd(config);
