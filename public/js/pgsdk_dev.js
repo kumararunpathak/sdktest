@@ -211,8 +211,12 @@
             return str;
         }
 
-        var getAdFromServer = function(url,cb){
+        var wrapResponseInHtml = function (a) {
+            var b = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><html><head><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/></head><body style="margin: 0px;padding: 0px;background-color: black;">';
+            return b += a, b += "</body></html>"
+        }
 
+        var getAdFromServer = function(url,cb){
             var xmlhttp;
             if (window.XMLHttpRequest)
             {// code for IE7+, Firefox, Chrome, Opera, Safari
@@ -226,6 +230,8 @@
             xmlhttp.onreadystatechange = function() {
                 if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
                     var e = xmlhttp.responseText;
+                    -1 == e.indexOf("<html") && (e = wrapResponseInHtml(e))
+                    e.replace("<body>", '<body style="margin:0px;padding:0px;">')
                     cb(null,e);
                 }else{
                     cb({message:"some error"});
@@ -233,33 +239,6 @@
             };
             xmlhttp.open("GET", url, true);
             xmlhttp.send();
-
-        }
-
-        var ad = function (ad, config) {
-            if (typeof config == "object" && config != null) {
-                ad.config = config
-            } else {
-                ad.config = defaultParams;
-            }
-            var url = getReqUrl(config);
-            getAdFromServer(url,function(err,response){
-                if(!err){
-                    ad.iFrameRef.contentWindow.document.open();
-                    ad.iFrameRef.contentWindow.document.write(response);
-                    ad.iFrameRef.contentWindow.document.close();
-                    ad.iFrameRef.style.display = "block";
-                    ad.iFrameRef.style.width = ad.iFrameRef.parentNode.style.width = config.ad_width + "px";
-                    ad.iFrameRef.style.height = ad.iFrameRef.parentNode.style.height = config.ad_height + "px";
-                    ad.adContainer.appendChild(ad.iFrameRef);
-                    ad.adContainer.style.display = "block";
-                    if (ad.config.ad_type === 'int' || ad.config.ad_type === true) {
-                        showBGPopup();
-                        adCloseButton(ad.iFrameRef,ad.config);
-                    }
-                }
-                return ad
-            });
 
         }
 
@@ -302,11 +281,16 @@
 
         var initAd = function (config) {
 
+            if(adLoaded){
+                return true;
+            }
+
             var randomId = getRandomId();
             var iFrameID = 'pg-ifame-' + randomId, iframe, ad;
             var iframe = document.createElement("iframe");
             var adContainer = document.createElement("div");
             adContainer.style.display = 'none';
+
             if ((config.ad_type === 'int' || config.ad_type == true) && !adLoaded) {
                 adContainer.style.position = 'absolute';
                 adContainer.style.top = "0px";
@@ -325,6 +309,7 @@
                     scriptContainer.parentNode.insertBefore(adContainer, scriptContainer);
                 }
             }
+
             iframe.class = "pg-sdk-ad";
             iframe.id = iFrameID;
             iframe.style.width = config.ad_width;
@@ -334,13 +319,27 @@
             iframe.scrolling = "no";
             iframe.marginHeight = "0px";
             iframe.marginWidth="0px";
-            adContainer.appendChild(iframe);
-            ad = createAd(iframe, adContainer,config);
+            var url = getReqUrl(config);
 
-            if(!adLoaded){
-                ad.getNewAd(config);
-                adLoaded = true;
-            }
+            getAdFromServer(url,function(err,response){
+                if(!err && !adLoaded){
+                    adContainer.appendChild(iframe);
+                    iframe.contentWindow.document.open();
+                    iframe.contentWindow.document.write(response);
+                    iframe.contentWindow.document.close();
+                    iframe.style.display = "block";
+                    iframe.style.width =  config.ad_width + "px";
+                    iframe.style.height = config.ad_height + "px";
+                    adContainer.style.display = 'block';
+                    iframe.style.display="block";
+                    if(config.ad_type == 'int' || config.ad_type == true){
+                        adCloseButton(iframe,config);
+                        showBGPopup();
+                    }
+                    adLoaded = true;
+                }
+                return ad
+            });
 
         }
 
