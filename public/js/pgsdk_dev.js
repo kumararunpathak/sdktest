@@ -4,6 +4,7 @@
         var baseUrl = 'ads.personagraph.com/ad/med/ss',
             intOverlay,
             intOverlayId,
+            adLoaded = false,
             intOverlayAdContainer,
             intOverlayAdContainerId,
             versionString = 'v1.0',
@@ -210,11 +211,6 @@
             return str;
         }
 
-        var wrapResponseInHtml = function (a) {
-            var b = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><html><head><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/></head><body style="margin: 0px;padding: 0px;background-color: black;">';
-            return b += a, b += "</body></html>"
-        }
-
         var getAdFromServer = function(url,cb){
 
             var xmlhttp;
@@ -230,16 +226,10 @@
             xmlhttp.onreadystatechange = function() {
                 if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
                     var e = xmlhttp.responseText;
-                    -1 == e.indexOf("<html") && (e = wrapResponseInHtml(e))
-                    e.replace("<body>", '<body style="margin:0px;padding:0px;">')
-                    //iframe.contentWindow.document.open();
-                    //iframe.contentWindow.document.write(e);
-                    //iframe.contentWindow.document.close();
                     cb(null,e);
                 }else{
                     cb({message:"some error"});
                 }
-
             };
             xmlhttp.open("GET", url, true);
             xmlhttp.send();
@@ -293,19 +283,21 @@
         }
 
         var showBGPopup = function(){
-            intOverlay = document.createElement("div");
-            intOverlayId = 'pg-int-overlay-' + getRandomId();
-            intOverlay.id = intOverlayId;
-            intOverlay.style.position = 'absolute';
-            intOverlay.display = 'block';
-            intOverlay.style.top = "0px";
-            intOverlay.style.background = "#999";
-            intOverlay.style.opacity = 0.5;
-            intOverlay.style.zIndex = 6000001;
-            intOverlay.style.width = "100%";
-            intOverlay.style.height = document.body.clientHeight + 'px';
-            intOverlay.scrolling = "no";
-            document.body.appendChild(intOverlay);
+            if(!intOverlay){
+                intOverlay = document.createElement("div");
+                intOverlayId = 'pg-int-overlay-' + getRandomId();
+                intOverlay.id = intOverlayId;
+                intOverlay.style.position = 'absolute';
+                intOverlay.display = 'block';
+                intOverlay.style.top = "0px";
+                intOverlay.style.background = "#999";
+                intOverlay.style.opacity = 0.5;
+                intOverlay.style.zIndex = 6000001;
+                intOverlay.style.width = "100%";
+                intOverlay.style.height = document.body.clientHeight + 'px';
+                intOverlay.scrolling = "no";
+                document.body.appendChild(intOverlay);
+            }
         }
 
         var initAd = function (config) {
@@ -315,8 +307,7 @@
             var iframe = document.createElement("iframe");
             var adContainer = document.createElement("div");
             adContainer.style.display = 'none';
-
-            if (config.ad_type === 'int' || config.ad_type == true) {
+            if ((config.ad_type === 'int' || config.ad_type == true) && !adLoaded) {
                 adContainer.style.position = 'absolute';
                 adContainer.style.top = "0px";
                 adContainer.scrolling = "no";
@@ -328,14 +319,12 @@
                 adContainer.style.marginTop = marginTop + 'px';
                 document.body.appendChild(adContainer);
                 adContainer.style.zIndex = 6000002;
-
             } else {
                 var scriptContainer = document.getElementById('_pgads');
                 if (scriptContainer) {
                     scriptContainer.parentNode.insertBefore(adContainer, scriptContainer);
                 }
             }
-
             iframe.class = "pg-sdk-ad";
             iframe.id = iFrameID;
             iframe.style.width = config.ad_width;
@@ -347,7 +336,12 @@
             iframe.marginWidth="0px";
             adContainer.appendChild(iframe);
             ad = createAd(iframe, adContainer,config);
-            ad.getNewAd(config);
+
+            if(!adLoaded){
+                ad.getNewAd(config);
+                adLoaded = true;
+            }
+
         }
 
         window._pgjssdk = {
@@ -367,7 +361,6 @@
                 }
                 if (intOverlay) {
                     document.body.removeChild(intOverlay);
-                    intOverlay == null;
                 }
             }
         }
