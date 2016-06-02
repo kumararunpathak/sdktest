@@ -217,6 +217,7 @@
         }
 
         var getAdFromServer = function(url,cb){
+
             var xmlhttp;
             if (window.XMLHttpRequest)
             {// code for IE7+, Firefox, Chrome, Opera, Safari
@@ -228,13 +229,15 @@
             }
 
             xmlhttp.onreadystatechange = function() {
-                if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                    var e = xmlhttp.responseText;
-                    -1 == e.indexOf("<html") && (e = wrapResponseInHtml(e))
-                    e.replace("<body>", '<body style="margin:0px;padding:0px;">')
-                    cb(null,e);
-                }else{
-                    cb({message:"some error"});
+                if(xmlhttp.readyState == 4){
+                    if(xmlhttp.status == 200) {
+                        var e = xmlhttp.responseText;
+                        -1 == e.indexOf("<html") && (e = wrapResponseInHtml(e))
+                        e.replace("<body>", '<body style="margin:0px;padding:0px;">')
+                        cb(null,e);
+                    }else{
+                        cb({message:"some error"});
+                    }
                 }
             };
             xmlhttp.open("GET", url, true);
@@ -279,12 +282,12 @@
             }
         }
 
-        var initAd = function (config) {
+        var initAd = function (config,c) {
 
             if(adLoaded){
+                c && c(0)
                 return true;
             }
-
             var randomId = getRandomId();
             var iFrameID = 'pg-ifame-' + randomId, iframe, ad;
             var iframe = document.createElement("iframe");
@@ -337,6 +340,9 @@
                         showBGPopup();
                     }
                     adLoaded = true;
+                    c && c(!0);
+                }else{
+                    c && c(0);
                 }
                 return ad
             });
@@ -349,7 +355,7 @@
                setTimeout(function () {
                     validateConfig(config);
                     config = mergeDefaultParams(config);
-                    initAd(config);
+                    initAd(config,cb);
                }, 0);
             },
 
