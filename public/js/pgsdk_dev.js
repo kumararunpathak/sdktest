@@ -2,7 +2,7 @@
     if (!window._pgjssdk) {
 
         var baseUrl = 'ads.personagraph.com/ad/med/ss',
-            clickUrl = 'ad-stage.personagraph.com/ad/med/click',
+            clickUrl = 'ad-stage.personagraph.com/med/click',
             intOverlay,
             intOverlayId,
             intAdLoaded = false,
@@ -364,12 +364,11 @@
                         var elem = document.activeElement;
                         if(elem && elem.id == iFrameID){
                             var url = getClickUrl(config);
-                            var img = document.createElement('img');
-                            img.src = url;
-
+                            var img1 = document.createElement('img');
+                            img1.src = url;
                             if(config.click_track_url){
-                                var img = document.createElement('img');
-                                img.src = config.click_track_url;
+                                var img2 = document.createElement('img');
+                                img2.src = config.click_track_url;
                             }
                             clearInterval(monitor);
                         }
