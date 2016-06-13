@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,7 +12,6 @@
 
     <!-- Bootstrap Core CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.css" rel="stylesheet">
-
 </head>
 
 <body style="padding-top:70px;">
@@ -58,21 +56,36 @@
     </div>
 
     <!-- /.row -->
-    <script src="http://apis.personagraph.com/sdk/pgjs.js"></script>
-    <script type="text/javascript" id="_pgads">
 
-        function callBack(adFilled) {
-            //adFilled will be true if the ad fills, else it will be false
-            console.log("Ad was filled : " + adFilled);
-        };
+    <!--Personagraph Test Campaign 300 x 50-->
 
+    <script src="js/pgsdk_dev.js"></script>
+    <script type="text/javascript" id="PG-781-1582-00000310">
         _pgjssdk.showAd({
-            'pid':'PG-781-1582-00000310',
-            'ad_width':300,
-            'ad_height':100,
-        },callBack);
+            pid:'PG-781-1582-00000310',
+            ad_width:300,
+            ad_height:100,
+            bundle_id:'BUNDLEID',
+            device_id:'DEVICEID',
+            click_track_url:'http://abc1.com'
+        });
     </script>
 
+
+
+    <script src="js/pgsdk_dev.js"></script>
+    <script type="text/javascript" id="PG-781-1582-00000311">
+        _pgjssdk.showAd({
+            pid:'PG-781-1582-00000311',
+            ad_width:300,
+            ad_height:100,
+            bundle_id:'BUNDLEID',
+            device_id:'DEVICEID',
+            click_track_url:'http://techjini.com'
+        });
+    </script>
+
+    <!--Personagraph Test Campaign 320 x 50-->
     <!-- Project One -->
     <div class="row">
         <div class="col-md-5">
@@ -80,8 +93,10 @@
             <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Laudantium veniam exercitationem expedita laborum at voluptate. Labore, voluptates totam at aut nemo deserunt rem magni pariatur quos perspiciatis atque eveniet unde.</p>
             <a class="btn btn-primary" href="#">View Project <span class="glyphicon glyphicon-chevron-right"></span></a>
         </div>
+
         <div class="col-md-5">
             <h3>Project One</h3>
+
             <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Laudantium veniam exercitationem expedita laborum at voluptate. Labore, voluptates totam at aut nemo deserunt rem magni pariatur quos perspiciatis atque eveniet unde.</p>
             <a class="btn btn-primary" href="#">View Project <span class="glyphicon glyphicon-chevron-right"></span></a>
         </div>
@@ -100,6 +115,9 @@
 
             <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Laudantium veniam exercitationem expedita laborum at voluptate. Labore, voluptates totam at aut nemo deserunt rem magni pariatur quos perspiciatis atque eveniet unde.</p>
             <a class="btn btn-primary" href="#">View Project <span class="glyphicon glyphicon-chevron-right"></span></a>
+
+
+
         </div>
     </div>
     <div class="row">

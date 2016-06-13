@@ -2,9 +2,10 @@
     if (!window._pgjssdk) {
 
         var baseUrl = 'ads.personagraph.com/ad/med/ss',
+            clickUrl = 'ad-stage.personagraph.com/ad/med/click',
             intOverlay,
             intOverlayId,
-            adLoaded = false,
+            intAdLoaded = false,
             intOverlayAdContainer,
             intOverlayAdContainerId,
             versionString = 'v1.0',
@@ -128,21 +129,21 @@
             for (var i = 0; i < mandatoryParams.length; i++) {
                 var k = mandatoryParams[i];
                 if (!config.hasOwnProperty(k) || config[k] === null || config[k].length === 0) {
-                    throw "pgsdk.js: ERROR: missing required config parameter '" + k + "'"
+                    throw "pgjs.js: ERROR: missing required config parameter '" + k + "'"
                 }
             }
 
             if (isMobile()) {
                 if (!config.device_id)
-                    throw "pgsdk.js: ERROR: missing required config parameter device_id"
+                    throw "pgjs.js: ERROR: missing required config parameter device_id"
                 if (!config.bundle_id)
-                    throw "pgsdk.js: ERROR: missing required config parameter bundle_id"
+                    throw "pgjs.js: ERROR: missing required config parameter bundle_id"
             }
 
             var adSlot = config.ad_width + "X" + config.ad_height;
 
             if (valid_ad_slots.indexOf(adSlot) == -1) {
-                throw "pgsdk.js: ERROR: invalid value of ad dimension";
+                throw "pgjs.js: ERROR: invalid value of ad dimension";
             }
         }
 
@@ -165,6 +166,7 @@
                     c_id = createCookie();
                 }
                 config.device_id = c_id;
+                config.bundle_id = window.location.host;
             } else {
                 config.in_app = 'true';
             }
@@ -188,7 +190,7 @@
 
             var qry = [], k;
             for (k in config) {
-                if (k != 'container_id') {
+                if (k != 'ad_container_id') {
                     var value = config[k];
                     qry.push(encodeURIComponent(k) + "=" + encodeURIComponent(value))
                 }
@@ -200,6 +202,11 @@
 
         var getReqUrl = function (config) {
             var url = getProtocol() + "//" + baseUrl + "?" + getQueryString(config);
+            return url;
+        }
+
+        var getClickUrl = function(config){
+            var url = getProtocol() + "//" + clickUrl + "?" + getQueryString(config);
             return url;
         }
 
@@ -260,16 +267,18 @@
             var closeButton = document.createElement("div");
             closeButton.setAttribute("class", "pg-sdk-close-btn");
             closeButton.setAttribute("style", "position: fixed; top:10px; right:10px");
-            closeButton.innerHTML = "<img src='http://ec2-54-198-185-45.compute-1.amazonaws.com/sdk/closeIcon.png' width='40px' height='40px' onclick='window._pgjssdk.closeAd(this);' />";
+            closeButton.innerHTML = "<img src='http://apis.personagraph.com/sdk/closeIcon.png' width='40px' height='40px' onclick='window._pgjssdk.closeAd(this);' />";
             iframe.parentNode.insertBefore(closeButton, iframe.parentNode.firstChild)
         }
 
         var showBGPopup = function(){
+
             if(!intOverlay){
                 intOverlay = document.createElement("div");
                 intOverlayId = 'pg-int-overlay-' + getRandomId();
                 intOverlay.id = intOverlayId;
-                intOverlay.style.position = 'absolute';
+                intOverlay.style.position = 'fixed';
+                intOverlay.style.margin = '2px';
                 intOverlay.display = 'block';
                 intOverlay.style.top = "0px";
                 intOverlay.style.background = "#999";
@@ -280,36 +289,45 @@
                 intOverlay.scrolling = "no";
                 document.body.appendChild(intOverlay);
             }
+
         }
 
         var initAd = function (config,c) {
 
-            if(adLoaded){
-                c && c(0)
-                return true;
-            }
             var randomId = getRandomId();
             var iFrameID = 'pg-ifame-' + randomId, iframe, ad;
             var iframe = document.createElement("iframe");
             var adContainer = document.createElement("div");
             adContainer.style.display = 'none';
-
-            if ((config.ad_type === 'int' || config.ad_type == true) && !adLoaded) {
-                adContainer.style.position = 'absolute';
-                adContainer.style.top = "0px";
-                adContainer.scrolling = "no";
-                var marginLeft = Math.ceil((window.innerWidth - config.ad_width) / 2);
-                marginLeft = marginLeft > 0 ? marginLeft : 0;
-                var marginTop = Math.ceil((window.innerHeight - config.ad_height) / 2);
-                marginTop = marginTop > 0 ? marginTop : 0;
-                adContainer.style.marginLeft = marginLeft + 'px';
-                adContainer.style.marginTop = marginTop + 'px';
-                document.body.appendChild(adContainer);
-                adContainer.style.zIndex = 6000002;
+            if ((config.ad_type === 'int' || config.ad_type == true)) {
+                if(!intAdLoaded){
+                    intAdLoaded = true;
+                    adContainer.style.position = 'fixed';
+                    adContainer.style.top = "0px";
+                    adContainer.scrolling = "no";
+                    var marginLeft = Math.ceil((window.innerWidth - config.ad_width) / 2);
+                    marginLeft = marginLeft > 0 ? marginLeft : 0;
+                    var marginTop = Math.ceil((window.innerHeight - config.ad_height) / 2);
+                    marginTop = marginTop > 0 ? marginTop : 0;
+                    adContainer.style.marginLeft = marginLeft + 'px';
+                    adContainer.style.marginTop = marginTop + 'px';
+                    document.body.appendChild(adContainer);
+                    adContainer.style.zIndex = 6000002;
+                }else{
+                    c && c(!1)
+                    return true;
+                }
             } else {
-                var scriptContainer = document.getElementById('_pgads');
-                if (scriptContainer) {
-                    scriptContainer.parentNode.insertBefore(adContainer, scriptContainer);
+                var container;
+                if(config.ad_container_id && (container = document.getElementById(config.ad_container_id))){
+                    container.appendChild(adContainer);
+                }else{
+                    var scriptContainer = document.getElementById(config.pid);
+                    if (scriptContainer) {
+                        scriptContainer.parentNode.insertBefore(adContainer, scriptContainer);
+                    }else{
+                        throw "pgjs.js: ERROR: Either pass ad container id or assign pid as html id to the script tag"
+                    }
                 }
             }
 
@@ -325,7 +343,8 @@
             var url = getReqUrl(config);
 
             getAdFromServer(url,function(err,response){
-                if(!err && !adLoaded){
+
+                if(!err){
                     adContainer.appendChild(iframe);
                     iframe.contentWindow.document.open();
                     iframe.contentWindow.document.write(response);
@@ -335,14 +354,30 @@
                     iframe.style.height = config.ad_height + "px";
                     adContainer.style.display = 'block';
                     iframe.style.display="block";
+
                     if(config.ad_type == 'int' || config.ad_type == true){
                         adCloseButton(iframe,config);
                         showBGPopup();
                     }
-                    adLoaded = true;
+
+                    var monitor = setInterval(function(){
+                        var elem = document.activeElement;
+                        if(elem && elem.id == iFrameID){
+                            var url = getClickUrl(config);
+                            var img = document.createElement('img');
+                            img.src = url;
+
+                            if(config.click_track_url){
+                                var img = document.createElement('img');
+                                img.src = config.click_track_url;
+                            }
+                            clearInterval(monitor);
+                        }
+                    }, 100);
+
                     c && c(!0);
                 }else{
-                    c && c(0);
+                    c && c(!1);
                 }
                 return ad
             });
@@ -369,7 +404,6 @@
                 }
             }
         }
-
     } else {
         console.log('File was already included');
     }
